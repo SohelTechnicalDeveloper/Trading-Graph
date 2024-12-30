@@ -41,7 +41,7 @@ const GraphComponent = () => {
     },
     "6M": {
       labels: ["June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"],
-      data:[],
+      data: [],
     },
     "1Y": {
       labels: [
@@ -58,12 +58,14 @@ const GraphComponent = () => {
         "Nov",
         "Dec",
       ],
-      data: []
+      data: [],
     },
   };
   const [timeRange, setTimeRange] = useState("24H");
-  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
-  const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
+  const [toDate, setToDate] = useState(new Date().toISOString().split("T")[0]);
+  const [fromDate, setFromDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [chartData, setChartData] = useState({
     labels: graphData["24H"].labels,
     datasets: [
@@ -130,7 +132,7 @@ const GraphComponent = () => {
 
   useEffect(() => {
     getGraphData(); // get data on component loading
-  },[fromDate]);
+  }, [fromDate]);
 
   const handleTimeRangeChange = (range) => {
     // debugger
@@ -139,57 +141,137 @@ const GraphComponent = () => {
     let date = new Date();
     date.setFullYear(date.getFullYear()); // Set the year
     date.setMonth(date.getMonth()); // Month is zero-based (0 for January, 10 for November)
-    date.setDate( date.getDate()); // Set the day of the month
+    date.setDate(date.getDate()); // Set the day of the month
 
     switch (range) {
       case "24H": // Last 24 hours
+        setChartData({
+          labels: graphData["24H"].labels,
+          datasets: [
+            {
+              label: "EUR-USD",
+              data: chartOptions,
+              borderColor: "#00ff00",
+              backgroundColor: "rgba(0, 255, 0, 0.1)",
+              fill: true,
+              pointRadius: 5,
+              pointBackgroundColor: "#fff",
+              tension: 0.5,
+            },
+          ],
+        });
         setFromDate(formatDate(date)); // No change to date needed
         break;
 
       case "7D": // Last 7 days
+        setChartData({
+          labels: graphData["7D"].labels,
+          datasets: [
+            {
+              label: "EUR-USD",
+              data: chartOptions,
+              borderColor: "#00ff00",
+              backgroundColor: "rgba(0, 255, 0, 0.1)",
+              fill: true,
+              pointRadius: 5,
+              pointBackgroundColor: "#fff",
+              tension: 0.5,
+            },
+          ],
+        });
         date.setDate(date.getDate() - 6); // Add 6 days
         setFromDate(formatDate(date));
         break;
 
       case "1M": // Last 1 month
-        date.setMonth(date.getMonth() - 1); // Add 1 month
+        const labels = apiData.map((item) => {
+          const date = new Date(item.date);
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = date.toLocaleString("default", { month: "short" });
+          const year = date.getFullYear();
+          return `${month} ${day}, ${year}`;
+        });
+        const data = apiData.map((item) => item.closeBid);
+        setChartData({
+          labels,
+          datasets: [
+            {
+              label: "EUR-USD",
+              data,
+              borderColor: "#00ff00",
+              backgroundColor: "rgba(0, 255, 0, 0.1)",
+              fill: true,
+              pointRadius: 5,
+              pointBackgroundColor: "#fff",
+              tension: 0.5,
+            },
+          ],
+        });
+        date.setMonth(date.getMonth() - 1); // Subtract 1 month
         setFromDate(formatDate(date));
         break;
 
       case "6M": // Last 6 months
-        date.setMonth(date.getMonth() - 6); // Add 6 months
+        const sixMonthsLabels = apiData.map((item) => {
+          const date = new Date(item.date);
+          const month = date.toLocaleString("default", { month: "short" });
+          return `${month}`;
+        });
+        const sixMonthsData = apiData.map((item) => item.closeBid);
+        setChartData({
+          labels: sixMonthsLabels,
+          datasets: [
+            {
+              label: "EUR-USD",
+              data: sixMonthsData,
+              borderColor: "#00ff00",
+              backgroundColor: "rgba(0, 255, 0, 0.1)",
+              fill: true,
+              pointRadius: 5,
+              pointBackgroundColor: "#fff",
+              tension: 0.5,
+            },
+          ],
+        });
+        date.setMonth(date.getMonth() - 6); // Subtract 6 months
         setFromDate(formatDate(date));
         break;
 
       case "1Y": // Last 1 year
-        date.setFullYear(date.getFullYear() - 1); // Add 1 year
-        setFromDate(formatDate(date));  
+        const oneYearLabels = apiData.map((item) => {
+          const date = new Date(item.date);
+          const month = date.toLocaleString("default", { month: "short" });
+          const year = date.getFullYear();
+          return `${month}`;
+        });
+        const oneYearData = apiData.map((item) => item.closeBid);
+        setChartData({
+          labels: oneYearLabels,
+          datasets: [
+            {
+              label: "EUR-USD",
+              data: oneYearData,
+              borderColor: "#00ff00",
+              backgroundColor: "rgba(0, 255, 0, 0.1)",
+              fill: true,
+              pointRadius: 5,
+              pointBackgroundColor: "#fff",
+              tension: 0.5,
+            },
+          ],
+        });
+        date.setFullYear(date.getFullYear() - 1); // Subtract 1 year
+        setFromDate(formatDate(date));
         break;
 
       default:
         break;
     }
 
-    setChartData({
-      labels: graphData[range].labels,
-      datasets: [
-        {
-          label: "EUR-USD",
-          data: chartOptions,
-          borderColor: "#00ff00",
-          backgroundColor: "rgba(0, 255, 0, 0.1)",
-          fill: true,
-          pointRadius: 5,
-          pointBackgroundColor: "#fff",
-          tension: 0.5,
-        },
-      ],
-    });
     getGraphData(); // get data on component loading
   };
 
   // Helper function to format date as dd-mm-yyyy
-
   const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0"); // Month is 0-based
