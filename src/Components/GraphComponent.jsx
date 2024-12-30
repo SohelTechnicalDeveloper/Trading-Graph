@@ -200,8 +200,7 @@ const GraphComponent = () => {
           const date = new Date(item.date);
           const day = String(date.getDate()).padStart(2, "0");
           const month = date.toLocaleString("default", { month: "short" });
-          const year = date.getFullYear();
-          return `${month} ${day}, ${year}`;
+          return `${month} ${day}`;
         });
         const data = apiData.map((item) => item.closeBid);
         setChartData({
@@ -224,11 +223,21 @@ const GraphComponent = () => {
         break;
 
       case "6M": // Last 6 months
-        const sixMonthsLabels = apiData.map((item) => {
-          const date = new Date(item.date);
-          const month = date.toLocaleString("default", { month: "short" });
-          return `${month}`;
-        });
+        const newMonths = new Set();
+        const sixMonthsLabels = apiData
+          .map((item) => {
+            const date = new Date(item.date);
+            const month = date.toLocaleString("default", { month: "short" });
+            const year = date.getFullYear();
+            const monthYear = `${month} ${year}`;
+            if (!newMonths.has(monthYear)) {
+              newMonths.add(monthYear);
+              return monthYear;
+            }
+            return null;
+          })
+          .filter((label) => label !== null);
+
         const sixMonthsData = apiData.map((item) => item.closeBid);
         setChartData({
           labels: sixMonthsLabels,
@@ -250,12 +259,20 @@ const GraphComponent = () => {
         break;
 
       case "1Y": // Last 1 year
-        const oneYearLabels = apiData.map((item) => {
-          const date = new Date(item.date);
-          const month = date.toLocaleString("default", { month: "short" });
-          const year = date.getFullYear();
-          return `${month}`;
-        });
+        const uniqueMonths = new Set();
+        const oneYearLabels = apiData
+          .map((item) => {
+            const date = new Date(item.date);
+            const month = date.toLocaleString("default", { month: "short" });
+            const Months = `${month} `;
+            if (!uniqueMonths.has(Months)) {
+              uniqueMonths.add(Months);
+              return Months;
+            }
+            return null;
+          })
+          .filter((label) => label !== null);
+
         const oneYearData = apiData.map((item) => item.closeBid);
         setChartData({
           labels: oneYearLabels,
