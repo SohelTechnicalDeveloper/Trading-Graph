@@ -29,19 +29,19 @@ const GraphComponent = () => {
   const graphData = {
     "24H": {
       labels: ["6:00", "10:00", "14:00", "18:00", "22:00", "2:00"],
-      data: [1.0823, 1.0825, 1.0826, 1.0824, 1.0823, 1.0827],
+      data: [],
     },
     "7D": {
       labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      data: [1.0815, 1.0822, 1.0828, 1.0824, 1.083, 1.0818, 1.0823],
+      data: [],
     },
     "1M": {
-      labels: ["1 Dec", "5 Dec", "10 Dec", "15 Dec", "20 Dec", "25 Dec"],
-      data: [1.08, 1.081, 1.0815, 1.0813, 1.0818, 1.0824],
+      labels: ["1 Nov", "5 Nov", "10 Nov", "15 Nov", "20 Nov", "25 Nov"],
+      data: [],
     },
     "6M": {
       labels: ["June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"],
-      data: [1.0723, 1.075, 1.0785, 1.0789, 1.0803, 1.0824],
+      data:[],
     },
     "1Y": {
       labels: [
@@ -58,14 +58,12 @@ const GraphComponent = () => {
         "Nov",
         "Dec",
       ],
-      data: [
-        1.072, 1.0755, 1.078, 1.079, 1.0784, 1.0803, 1.082, 1.0835, 1.085,
-        1.086, 1.084, 1.0824,
-      ],
+      data: []
     },
   };
   const [timeRange, setTimeRange] = useState("24H");
-  const [toDate, setToDate] = useState("01-11-2024");
+  const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+  const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
   const [chartData, setChartData] = useState({
     labels: graphData["24H"].labels,
     datasets: [
@@ -94,8 +92,8 @@ const GraphComponent = () => {
         "http://65.1.228.250:8080/fxd_trading/rate_feed/getRateFeed",
         {
           currencyPairs: ["EUR-USD"],
-          fromDate: "01-11-2024",
-          toDate: toDate,
+          fromDate,
+          toDate,
         }
       );
       if (response.status === 200) {
@@ -113,7 +111,7 @@ const GraphComponent = () => {
             ])
         );
         setChartOptions(restData);
-        console.log(restData, "rest data");
+        console.log(result, "rest data");
 
         //  table print
         const formattedData = result.map((item) => ({
@@ -132,41 +130,40 @@ const GraphComponent = () => {
 
   useEffect(() => {
     getGraphData(); // get data on component loading
-  }, [toDate]);
+  },[fromDate]);
 
   const handleTimeRangeChange = (range) => {
     // debugger
     setTimeRange(range);
 
     let date = new Date();
-    date.setFullYear(2024); // Set the year
-    date.setMonth(10); // Month is zero-based (0 for January, 10 for November)
-    date.setDate(1); // Set the day of the month
-    console.log(range, "range");
+    date.setFullYear(date.getFullYear()); // Set the year
+    date.setMonth(date.getMonth()); // Month is zero-based (0 for January, 10 for November)
+    date.setDate( date.getDate()); // Set the day of the month
 
     switch (range) {
       case "24H": // Last 24 hours
-        setToDate(formatDate(date)); // No change to date needed
+        setFromDate(formatDate(date)); // No change to date needed
         break;
 
       case "7D": // Last 7 days
-        date.setDate(date.getDate() + 6); // Add 6 days
-        setToDate(formatDate(date));
+        date.setDate(date.getDate() - 6); // Add 6 days
+        setFromDate(formatDate(date));
         break;
 
       case "1M": // Last 1 month
-        date.setMonth(date.getMonth() + 1); // Add 1 month
-        setToDate(formatDate(date));
+        date.setMonth(date.getMonth() - 1); // Add 1 month
+        setFromDate(formatDate(date));
         break;
 
       case "6M": // Last 6 months
-        date.setMonth(date.getMonth() + 6); // Add 6 months
-        setToDate(formatDate(date));
+        date.setMonth(date.getMonth() - 6); // Add 6 months
+        setFromDate(formatDate(date));
         break;
 
       case "1Y": // Last 1 year
-        date.setFullYear(date.getFullYear() + 1); // Add 1 year
-        setToDate(formatDate(date));
+        date.setFullYear(date.getFullYear() - 1); // Add 1 year
+        setFromDate(formatDate(date));  
         break;
 
       default:
@@ -188,6 +185,7 @@ const GraphComponent = () => {
         },
       ],
     });
+    getGraphData(); // get data on component loading
   };
 
   // Helper function to format date as dd-mm-yyyy
