@@ -1,0 +1,29 @@
+.graph-body {
+  background-color: #000;
+  color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+  margin: auto;
+  font-family: Arial, sans-serif;
+}
+.time-range-btn {
+  background-color: transparent;
+  color: #525252;
+  border: 2px solid transparent;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+/* .time-range-btn:hover {
+    color: #fff;
+    border-color: #fff;
+  } */
+
+.time-range-btn.active {
+  color: #fff;
+  border: 2px solid #fff;
+}
