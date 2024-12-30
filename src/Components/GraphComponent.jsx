@@ -145,12 +145,19 @@ const GraphComponent = () => {
 
     switch (range) {
       case "24H": // Last 24 hours
+        const twentyFourHoursLabels = apiData.map((item) => {
+          const date = new Date(item.date);
+          const hours = String(date.getHours()).padStart(2, "0");
+          const minutes = String(date.getMinutes()).padStart(2, "0");
+          return `${hours}:${minutes}`;
+        });
+        const twentyFourHoursData = apiData.map((item) => item.closeBid);
         setChartData({
-          labels: graphData["24H"].labels,
+          labels: twentyFourHoursLabels,
           datasets: [
             {
               label: "EUR-USD",
-              data: chartOptions,
+              data: twentyFourHoursData,
               borderColor: "#00ff00",
               backgroundColor: "rgba(0, 255, 0, 0.1)",
               fill: true,
@@ -162,14 +169,20 @@ const GraphComponent = () => {
         });
         setFromDate(formatDate(date)); // No change to date needed
         break;
-
       case "7D": // Last 7 days
+        const sevenDaysLabels = apiData.map((item) => {
+          const date = new Date(item.date);
+          const day = String(date.getDate()).padStart(2, "0");
+          const month = date.toLocaleString("default", { month: "short" });
+          return `${day} ${month}`;
+        });
+        const sevenDaysData = apiData.map((item) => item.closeBid);
         setChartData({
-          labels: graphData["7D"].labels,
+          labels: sevenDaysLabels,
           datasets: [
             {
               label: "EUR-USD",
-              data: chartOptions,
+              data: sevenDaysData,
               borderColor: "#00ff00",
               backgroundColor: "rgba(0, 255, 0, 0.1)",
               fill: true,
@@ -179,10 +192,9 @@ const GraphComponent = () => {
             },
           ],
         });
-        date.setDate(date.getDate() - 6); // Add 6 days
+        date.setDate(date.getDate() - 6); // Subtract 6 days
         setFromDate(formatDate(date));
         break;
-
       case "1M": // Last 1 month
         const labels = apiData.map((item) => {
           const date = new Date(item.date);
