@@ -88,7 +88,7 @@ const GraphComponent = () => {
 
   // Mock data based on different time ranges only for demo
 
-  const getGraphData = async () => {
+  const getGraphData = async (fromDate, toDate) => {
     try {
       const response = await axios.post(
         "http://65.1.228.250:8080/fxd_trading/rate_feed/getRateFeed",
@@ -101,19 +101,6 @@ const GraphComponent = () => {
       if (response.status === 200) {
         const result = response.data.result;
         setApiData(result);
-        let restData = [];
-        result.map(
-          (val) =>
-            (restData = [
-              ...restData,
-              val.openBid,
-              val.highBid,
-              val.lowBid,
-              val.closeBid,
-            ])
-        );
-        setChartOptions(restData);
-        console.log(result, "rest data");
 
         //  table print
         const formattedData = result.map((item) => ({
@@ -131,14 +118,15 @@ const GraphComponent = () => {
   };
 
   useEffect(() => {
-    getGraphData(); // get data on component loading
-  }, [fromDate]);
+    getGraphData(fromDate, toDate); // get data on component loading
+  }, [fromDate, toDate]);
 
   const handleTimeRangeChange = (range) => {
     // debugger
     setTimeRange(range);
 
     let date = new Date();
+
     date.setFullYear(date.getFullYear()); // Set the year
     date.setMonth(date.getMonth()); // Month is zero-based (0 for January, 10 for November)
     date.setDate(date.getDate()); // Set the day of the month
@@ -296,11 +284,10 @@ const GraphComponent = () => {
       default:
         break;
     }
-
-    getGraphData(); // get data on component loading
   };
 
   // Helper function to format date as dd-mm-yyyy
+
   const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0"); // Month is 0-based
