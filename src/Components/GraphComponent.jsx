@@ -173,8 +173,7 @@ const GraphComponent = () => {
             .map((item) => {
               const date = new Date(item.date);
               const month = date.toLocaleString("default", { month: "short" });
-              const year = date.getFullYear();
-              const monthYear = `${month} ${year}`;
+              const monthYear = `${month}`;
               if (!uniqueMonths1Y.has(monthYear)) {
                 uniqueMonths1Y.add(monthYear);
                 return monthYear;
