@@ -85,7 +85,7 @@ const GraphComponent = () => {
   const timeRanges = ["24H", "7D", "1M", "6M", "1Y"];
   const [tableData, setTableData] = useState([]);
 
-  const getGraphData = async (fromDate, toDate) => {
+  const getGraphData = async (fromDate, toDate) => {   // Fetch data from API
     try {
       const response = await axios.post(
         "http://65.1.228.250:8080/fxd_trading/rate_feed/getRateFeed",
@@ -118,12 +118,12 @@ const GraphComponent = () => {
   }, [fromDate, toDate]);
 
   useEffect(() => {
-    if (timeRange && apiData.length > 0) {
+    if (timeRange && apiData.length > 0) {  // Format data for chart
       let labels = [];
       let data = [];
 
-      switch (timeRange) {
-        case "24H":
+      switch (timeRange) {  // Format data based on time range
+        case "24H":                     // Format data for 24 hours
           labels = apiData.map((item) => {
             const date = new Date(item.date);
             const hours = String(date.getHours()).padStart(2, "0");
@@ -132,7 +132,7 @@ const GraphComponent = () => {
           });
           data = apiData.map((item) => item.closeBid);
           break;
-        case "7D":
+        case "7D":                                  // Format data for 7 days
           labels = apiData.map((item) => {
             const date = new Date(item.date);
             const day = String(date.getDate()).padStart(2, "0");
@@ -141,7 +141,7 @@ const GraphComponent = () => {
           });
           data = apiData.map((item) => item.closeBid);
           break;
-        case "1M":
+        case "1M":                                // Format data for 1 month
           labels = apiData.map((item) => {
             const date = new Date(item.date);
             const day = String(date.getDate()).padStart(2, "0");
@@ -150,7 +150,7 @@ const GraphComponent = () => {
           });
           data = apiData.map((item) => item.closeBid);
           break;
-        case "6M":
+        case "6M":                                     // Format data for 6 months
           const uniqueMonths6M = new Set();
           labels = apiData
             .map((item) => {
@@ -167,8 +167,8 @@ const GraphComponent = () => {
             .filter((label) => label !== null);
           data = apiData.map((item) => item.closeBid);
           break;
-        case "1Y":
-          const uniqueMonths1Y = new Set();
+        case "1Y":                                            // Format data for 1 year
+          const uniqueMonths1Y = new Set();  // Get unique months
           labels = apiData
             .map((item) => {
               const date = new Date(item.date);
@@ -181,19 +181,19 @@ const GraphComponent = () => {
               }
               return null;
             })
-            .filter((label) => label !== null);
+            .filter((label) => label !== null);   // Filter out null values
           data = apiData.map((item) => item.closeBid);
           break;
         default:
           break;
       }
 
-      setChartData({
-        labels,
+      setChartData({                        // Set chart data
+        labels,                           // Set labels based on time range
         datasets: [
           {
             label: "EUR-USD",
-            data,
+            data,                      // Set data based on time range
             borderColor: "#00ff00",
             backgroundColor: "rgba(0, 255, 0, 0.1)",
             fill: true,
@@ -204,36 +204,38 @@ const GraphComponent = () => {
         ],
       });
     }
-  }, [timeRange, apiData]);
+  }, [timeRange, apiData]);           // Update chart data when time range or API data changes
 
+
+  // Handle time range change
   const handleTimeRangeChange = (range) => {
     setTimeRange(range);
 
     let date = new Date();
     let newFromDate;
 
-    switch (range) {
-      case "24H":
+    switch (range) {           // Set from date based on time range
+      case "24H":                    // Set from date for 24 hours
         date.setDate(date.getDate() - 1);
         newFromDate = formatDate(date);
         setFromDate(newFromDate);
         break;
-      case "7D":
+      case "7D":                    // Set from date for 7 days
         date.setDate(date.getDate() - 6);
         newFromDate = formatDate(date);
         setFromDate(newFromDate);
         break;
-      case "1M":
+      case "1M":                         // Set from date for 1 month
         date.setMonth(date.getMonth() - 1);
         newFromDate = formatDate(date);
         setFromDate(newFromDate);
         break;
-      case "6M":
+      case "6M":                         // Set from date for 6 months
         date.setMonth(date.getMonth() - 6);
         newFromDate = formatDate(date);
         setFromDate(newFromDate);
-        break;
-      case "1Y":
+        break; 
+      case "1Y":                              // Set from date for 1 year
         date.setFullYear(date.getFullYear() - 1);
         newFromDate = formatDate(date);
         setFromDate(newFromDate);
@@ -243,7 +245,7 @@ const GraphComponent = () => {
     }
   };
 
-  const formatDate = (date) => {
+  const formatDate = (date) => {                                // Format date
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
@@ -254,7 +256,8 @@ const GraphComponent = () => {
     <div>
       <div className="graph-body mt-5">
         <p className="text-secondary text-start fw-bold">EUR-USD</p>
-        <div className="d-flex justify-content-end gap-2">
+       
+        <div className="d-flex justify-content-end gap-2">  {/*Time range buttons*/}
           {timeRanges.map((range) => (
             <button
               key={range}
@@ -287,12 +290,12 @@ const GraphComponent = () => {
         </div>
 
         <div style={{ height: "300px", margin: "20px 0" }}>
-          <Line data={chartData} options={{ animation: { duration: 800 } }} />
+          <Line data={chartData} options={{ animation: { duration: 800 } }} />  {/* Display chart*/}
         </div>
       </div>
 
       <div className="mt-3 d-flex justify-content-center">
-        <table className="table table-bordered table-striped w-50">
+        <table className="table table-bordered table-striped w-50">    {/* Display table*/}
           <thead className="table-dark">
             <tr>
               <th>Date</th>
