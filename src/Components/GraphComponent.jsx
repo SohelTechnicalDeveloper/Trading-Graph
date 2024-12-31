@@ -3,6 +3,7 @@ import axios from "axios";
 import { Line } from "react-chartjs-2";
 import { IoArrowUp } from "react-icons/io5";
 import "../Styles/Graph.css";
+
 import {
   Chart as ChartJS,
   LineElement,
@@ -24,8 +25,6 @@ ChartJS.register(
 );
 
 const GraphComponent = () => {
-  // time ranges between graph Data keys
-
   const graphData = {
     "24H": {
       labels: ["6:00", "10:00", "14:00", "18:00", "22:00", "2:00"],
@@ -61,7 +60,8 @@ const GraphComponent = () => {
       data: [],
     },
   };
-  const [timeRange, setTimeRange] = useState("24H");
+
+  const [timeRange, setTimeRange] = useState("");
   const [toDate, setToDate] = useState(new Date().toISOString().split("T")[0]);
   const [fromDate, setFromDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -83,10 +83,7 @@ const GraphComponent = () => {
   });
   const [apiData, setApiData] = useState([]);
   const timeRanges = ["24H", "7D", "1M", "6M", "1Y"];
-  const [chartOptions, setChartOptions] = useState([]);
   const [tableData, setTableData] = useState([]);
-
-  // Mock data based on different time ranges only for demo
 
   const getGraphData = async (fromDate, toDate) => {
     try {
@@ -102,7 +99,6 @@ const GraphComponent = () => {
         const result = response.data.result;
         setApiData(result);
 
-        //  table print
         const formattedData = result.map((item) => ({
           date: item.date,
           closeBid: item.closeBid,
@@ -118,181 +114,140 @@ const GraphComponent = () => {
   };
 
   useEffect(() => {
-    getGraphData(fromDate, toDate); // get data on component loading
+    getGraphData(fromDate, toDate);
   }, [fromDate, toDate]);
 
+  useEffect(() => {
+    if (timeRange && apiData.length > 0) {
+      let labels = [];
+      let data = [];
+
+      switch (timeRange) {
+        case "24H":
+          labels = apiData.map((item) => {
+            const date = new Date(item.date);
+            const hours = String(date.getHours()).padStart(2, "0");
+            const minutes = String(date.getMinutes()).padStart(2, "0");
+            return `${hours}:${minutes}`;
+          });
+          data = apiData.map((item) => item.closeBid);
+          break;
+        case "7D":
+          labels = apiData.map((item) => {
+            const date = new Date(item.date);
+            const day = String(date.getDate()).padStart(2, "0");
+            const month = date.toLocaleString("default", { month: "short" });
+            return `${day} ${month}`;
+          });
+          data = apiData.map((item) => item.closeBid);
+          break;
+        case "1M":
+          labels = apiData.map((item) => {
+            const date = new Date(item.date);
+            const day = String(date.getDate()).padStart(2, "0");
+            const month = date.toLocaleString("default", { month: "short" });
+            return `${month} ${day}`;
+          });
+          data = apiData.map((item) => item.closeBid);
+          break;
+        case "6M":
+          const uniqueMonths6M = new Set();
+          labels = apiData
+            .map((item) => {
+              const date = new Date(item.date);
+              const month = date.toLocaleString("default", { month: "short" });
+              const year = date.getFullYear();
+              const monthYear = `${month} ${year}`;
+              if (!uniqueMonths6M.has(monthYear)) {
+                uniqueMonths6M.add(monthYear);
+                return monthYear;
+              }
+              return null;
+            })
+            .filter((label) => label !== null);
+          data = apiData.map((item) => item.closeBid);
+          break;
+        case "1Y":
+          const uniqueMonths1Y = new Set();
+          labels = apiData
+            .map((item) => {
+              const date = new Date(item.date);
+              const month = date.toLocaleString("default", { month: "short" });
+              const year = date.getFullYear();
+              const monthYear = `${month} ${year}`;
+              if (!uniqueMonths1Y.has(monthYear)) {
+                uniqueMonths1Y.add(monthYear);
+                return monthYear;
+              }
+              return null;
+            })
+            .filter((label) => label !== null);
+          data = apiData.map((item) => item.closeBid);
+          break;
+        default:
+          break;
+      }
+
+      setChartData({
+        labels,
+        datasets: [
+          {
+            label: "EUR-USD",
+            data,
+            borderColor: "#00ff00",
+            backgroundColor: "rgba(0, 255, 0, 0.1)",
+            fill: true,
+            pointRadius: 5,
+            pointBackgroundColor: "#fff",
+            tension: 0.5,
+          },
+        ],
+      });
+    }
+  }, [timeRange, apiData]);
+
   const handleTimeRangeChange = (range) => {
-    // debugger
     setTimeRange(range);
 
     let date = new Date();
-
-    date.setFullYear(date.getFullYear()); // Set the year
-    date.setMonth(date.getMonth()); // Month is zero-based (0 for January, 10 for November)
-    date.setDate(date.getDate()); // Set the day of the month
+    let newFromDate;
 
     switch (range) {
-      case "24H": // Last 24 hours
-        const twentyFourHoursLabels = apiData.map((item) => {
-          const date = new Date(item.date);
-          const hours = String(date.getHours()).padStart(2, "0");
-          const minutes = String(date.getMinutes()).padStart(2, "0");
-          return `${hours}:${minutes}`;
-        });
-        const twentyFourHoursData = apiData.map((item) => item.closeBid);
-        setChartData({
-          labels: twentyFourHoursLabels,
-          datasets: [
-            {
-              label: "EUR-USD",
-              data: twentyFourHoursData,
-              borderColor: "#00ff00",
-              backgroundColor: "rgba(0, 255, 0, 0.1)",
-              fill: true,
-              pointRadius: 5,
-              pointBackgroundColor: "#fff",
-              tension: 0.5,
-            },
-          ],
-        });
-        setFromDate(formatDate(date)); // No change to date needed
+      case "24H":
+        date.setDate(date.getDate() - 1);
+        newFromDate = formatDate(date);
+        setFromDate(newFromDate);
         break;
-      case "7D": // Last 7 days
-        const sevenDaysLabels = apiData.map((item) => {
-          const date = new Date(item.date);
-          const day = String(date.getDate()).padStart(2, "0");
-          const month = date.toLocaleString("default", { month: "short" });
-          return `${day} ${month}`;
-        });
-        const sevenDaysData = apiData.map((item) => item.closeBid);
-        setChartData({
-          labels: sevenDaysLabels,
-          datasets: [
-            {
-              label: "EUR-USD",
-              data: sevenDaysData,
-              borderColor: "#00ff00",
-              backgroundColor: "rgba(0, 255, 0, 0.1)",
-              fill: true,
-              pointRadius: 5,
-              pointBackgroundColor: "#fff",
-              tension: 0.5,
-            },
-          ],
-        });
-        date.setDate(date.getDate() - 6); // Subtract 6 days
-        setFromDate(formatDate(date));
+      case "7D":
+        date.setDate(date.getDate() - 6);
+        newFromDate = formatDate(date);
+        setFromDate(newFromDate);
         break;
-      case "1M": // Last 1 month
-        const labels = apiData.map((item) => {
-          const date = new Date(item.date);
-          const day = String(date.getDate()).padStart(2, "0");
-          const month = date.toLocaleString("default", { month: "short" });
-          return `${month} ${day}`;
-        });
-        const data = apiData.map((item) => item.closeBid);
-        setChartData({
-          labels,
-          datasets: [
-            {
-              label: "EUR-USD",
-              data,
-              borderColor: "#00ff00",
-              backgroundColor: "rgba(0, 255, 0, 0.1)",
-              fill: true,
-              pointRadius: 5,
-              pointBackgroundColor: "#fff",
-              tension: 0.5,
-            },
-          ],
-        });
-        date.setMonth(date.getMonth() - 1); // Subtract 1 month
-        setFromDate(formatDate(date));
+      case "1M":
+        date.setMonth(date.getMonth() - 1);
+        newFromDate = formatDate(date);
+        setFromDate(newFromDate);
         break;
-
-      case "6M": // Last 6 months
-        const newMonths = new Set();
-        const sixMonthsLabels = apiData
-          .map((item) => {
-            const date = new Date(item.date);
-            const month = date.toLocaleString("default", { month: "short" });
-            const year = date.getFullYear();
-            const monthYear = `${month} ${year}`;
-            if (!newMonths.has(monthYear)) {
-              newMonths.add(monthYear);
-              return monthYear;
-            }
-            return null;
-          })
-          .filter((label) => label !== null);
-
-        const sixMonthsData = apiData.map((item) => item.closeBid);
-        setChartData({
-          labels: sixMonthsLabels,
-          datasets: [
-            {
-              label: "EUR-USD",
-              data: sixMonthsData,
-              borderColor: "#00ff00",
-              backgroundColor: "rgba(0, 255, 0, 0.1)",
-              fill: true,
-              pointRadius: 5,
-              pointBackgroundColor: "#fff",
-              tension: 0.5,
-            },
-          ],
-        });
-        date.setMonth(date.getMonth() - 6); // Subtract 6 months
-        setFromDate(formatDate(date));
+      case "6M":
+        date.setMonth(date.getMonth() - 6);
+        newFromDate = formatDate(date);
+        setFromDate(newFromDate);
         break;
-
-      case "1Y": // Last 1 year
-        const uniqueMonths = new Set();
-        const oneYearLabels = apiData
-          .map((item) => {
-            const date = new Date(item.date);
-            const month = date.toLocaleString("default", { month: "short" });
-            const Months = `${month} `;
-            if (!uniqueMonths.has(Months)) {
-              uniqueMonths.add(Months);
-              return Months;
-            }
-            return null;
-          })
-          .filter((label) => label !== null);
-
-        const oneYearData = apiData.map((item) => item.closeBid);
-        setChartData({
-          labels: oneYearLabels,
-          datasets: [
-            {
-              label: "EUR-USD",
-              data: oneYearData,
-              borderColor: "#00ff00",
-              backgroundColor: "rgba(0, 255, 0, 0.1)",
-              fill: true,
-              pointRadius: 5,
-              pointBackgroundColor: "#fff",
-              tension: 0.5,
-            },
-          ],
-        });
-        date.setFullYear(date.getFullYear() - 1); // Subtract 1 year
-        setFromDate(formatDate(date));
+      case "1Y":
+        date.setFullYear(date.getFullYear() - 1);
+        newFromDate = formatDate(date);
+        setFromDate(newFromDate);
         break;
-
       default:
         break;
     }
   };
 
-  // Helper function to format date as dd-mm-yyyy
-
   const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Month is 0-based
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+    return `${year}-${month}-${day}`;
   };
 
   return (
@@ -303,7 +258,7 @@ const GraphComponent = () => {
           {timeRanges.map((range) => (
             <button
               key={range}
-              onClick={() => handleTimeRangeChange(range)} //change range on click button
+              onClick={() => handleTimeRangeChange(range)}
               className={`time-range-btn ${
                 timeRange === range ? "active" : ""
               }`}
@@ -332,7 +287,6 @@ const GraphComponent = () => {
         </div>
 
         <div style={{ height: "300px", margin: "20px 0" }}>
-          {/* Chats line  */}
           <Line data={chartData} options={{ animation: { duration: 800 } }} />
         </div>
       </div>
